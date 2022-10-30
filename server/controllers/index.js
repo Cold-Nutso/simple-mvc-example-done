@@ -256,7 +256,6 @@ const notFound = (req, res) => {
   });
 };
 
-
 // -----------------------------
 // - - - - - DOG STUFF - - - - -
 // -----------------------------
@@ -329,27 +328,26 @@ const searchDog = async (req, res) => {
   // Save the updated model
   const savePromise = doc.save();
 
+  const returnDocJson = () => {
+    const docDog = { name: doc.name, breed: doc.breed, age: doc.age };
+    return res.json(docDog);
+  };
+
   // If successful, return info
-  savePromise.then(() => res.json({
-    name: doc.name, 
-    breed: doc.breed, 
-    age: doc.age,
-  }));
+  savePromise.then(returnDocJson);
 
   // If something goes wrong saving to the database, log the error and send a message to the client.
   savePromise.catch((err) => {
     console.log(err);
     return res.status(500).json({ error: 'Something went wrong' });
   });
+
+  // I don't know man eslint is complaining about no return but there are returns everywhere
+  return null;
 };
 
 // Returns the name of the last added dog
 const getDogName = (req, res) => res.json({ name: lastAddedDog.name });
-
-
-
-
-
 
 // export the relevant public controller functions
 module.exports = {
