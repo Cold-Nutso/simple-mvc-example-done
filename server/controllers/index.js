@@ -84,6 +84,20 @@ const hostPage3 = (req, res) => {
   res.render('page3');
 };
 
+// Function for rendering the page4 template
+// Page4 iterates over an array of dogs
+const hostPage4 = async (req, res) => {
+  try {
+    const docs = await Dog.find({}).lean().exec();
+
+    // Once we get back the docs array, we can send it to page4
+    return res.render('page4', { dogs: docs });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: 'failed to find dogs' });
+  }
+};
+
 // Get name will return the name of the last added cat.
 const getName = (req, res) => res.json({ name: lastAddedCat.name });
 
@@ -285,7 +299,7 @@ const setDog = async (req, res) => {
 };
 
 // Function to handle searching a dog by name
-// AT SOME POINT IT WILL INCREASE THE AGE
+// If found, the age of the dog is increased
 const searchDog = async (req, res) => {
   // bodyParser stores query parameters in req.query
 
@@ -306,12 +320,31 @@ const searchDog = async (req, res) => {
 
   // If we do not find something that matches our search, doc will be empty.
   if (!doc) {
-    return res.json({ error: 'No dogs found' });
+    return res.json({ error: 'No such dog exists' });
   }
 
-  // Otherwise, we got a result and will send it back to the user.
-  return res.json({ name: doc.name, breed: doc.breed, age: doc.age });
+  // Increment age of dog found
+  doc.age++;
+
+  // Save the updated model
+  const savePromise = doc.save();
+
+  // If successful, return info
+  savePromise.then(() => res.json({
+    name: doc.name, 
+    breed: doc.breed, 
+    age: doc.age,
+  }));
+
+  // If something goes wrong saving to the database, log the error and send a message to the client.
+  savePromise.catch((err) => {
+    console.log(err);
+    return res.status(500).json({ error: 'Something went wrong' });
+  });
 };
+
+// Returns the name of the last added dog
+const getDogName = (req, res) => res.json({ name: lastAddedDog.name });
 
 
 
@@ -324,11 +357,13 @@ module.exports = {
   page1: hostPage1,
   page2: hostPage2,
   page3: hostPage3,
+  page4: hostPage4,
   getName,
   setName,
   updateLast,
   searchName,
   notFound,
   setDog,
-  searchDog
+  searchDog,
+  getDogName,
 };
